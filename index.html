@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>General Store - Interactive Merchant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=MedievalSharp&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f0d0e;
+            --card-bg: #1a1618;
+            --card-border: #3a3028;
+            --gold-primary: #d4af37;
+            --gold-light: #f3e5ab;
+            --gold-dark: #8a6d1c;
+            --text-main: #e0d8c3;
+            --text-muted: #a09585;
+            --accent-red: #8b2626;
+            --accent-green: #2a5a2a;
+            --price-badge: #2a2118;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Lora', serif;
+            line-height: 1.6;
+            padding: 5rem 1rem 2rem 1rem;
+            background-image: 
+                radial-gradient(circle at 50% 0%, #2a1f1d 0%, transparent 75%),
+                radial-gradient(circle at 50% 100%, #151013 0%, transparent 75%);
+            min-height: 100vh;
+        }
+
+        /* Sticky Top Bar for Wallet & Cart Summary */
+        .top-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 13, 14, 0.95);
+            border-bottom: 2px solid var(--gold-dark);
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .wallet-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-family: 'Cinzel', serif;
+        }
+
+        .coin-display {
+            color: var(--gold-primary);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .btn-small {
+            background: var(--price-badge);
+            border: 1px solid var(--gold-dark);
+            color: var(--gold-light);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .btn-small:hover {
+            background: var(--gold-primary);
+            color: #000;
+        }
+
+        .cart-trigger {
+            background: var(--gold-dark);
+            color: #fff;
+            border: 1px solid var(--gold-primary);
+            padding: 0.4rem 1rem;
+            border-radius: 4px;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .cart-trigger:hover {
+            background: var(--gold-primary);
+            color: #000;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            border-bottom: 2px solid var(--gold-dark);
+            padding-bottom: 1.5rem;
+            position: relative;
+        }
+
+        header::after {
+            content: '🪙';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-color);
+            padding: 0 10px;
+            font-size: 1.2rem;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 3rem;
+            color: var(--gold-primary);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-family: 'MedievalSharp', cursive;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+
+        .nav-quicklinks {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.8rem;
+            margin-bottom: 2.5rem;
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .quicklink {
+            color: var(--gold-light);
+            text-decoration: none;
+            padding: 0.4rem 0.8rem;
+            background: var(--price-badge);
+            border: 1px solid var(--gold-dark);
+            border-radius: 4px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .quicklink:hover {
+            background: var(--gold-primary);
+            color: #000;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+
+        .quicklink.highlight {
+            border-color: var(--gold-light);
+            background: var(--accent-red);
+            color: #fff;
+        }
+
+        .price-section {
+            margin-bottom: 3rem;
+        }
+
+        .price-header {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            color: var(--gold-light);
+            border-bottom: 1px dashed var(--gold-dark);
+            padding-bottom: 0.4rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .price-header::before {
+            content: '❖';
+            color: var(--gold-primary);
+            font-size: 1.2rem;
+        }
+
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .item-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .item-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--gold-primary);
+            box-shadow: 0 6px 12px rgba(212, 175, 55, 0.15);
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.8rem;
+            gap: 10px;
+        }
+
+        .item-title {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #fff;
+            line-height: 1.3;
+        }
+
+        .item-price {
+            font-family: 'Cinzel', serif;
+            background-color: var(--price-badge);
+            color: var(--gold-primary);
+            border: 1px solid var(--gold-dark);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .item-description {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            margin-bottom: 1rem;
+            flex-grow: 1;
+        }
+
+        .btn-add-cart {
+            width: 100%;
+            background: var(--price-badge);
+            border: 1px solid var(--gold-primary);
+            color: var(--gold-light);
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-add-cart:hover {
+            background: var(--gold-primary);
+            color: #000;
+        }
+
+        /* Accordion Styles */
+        .milestone-section, .path-rewards-section {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 2px solid var(--gold-dark);
+            scroll-margin-top: 80px;
+        }
+
+        .milestone-main-header, .path-main-header {
+            font-family: 'Cinzel', serif;
+            font-size: 2.2rem;
+            color: var(--gold-primary);
+            text-align: center;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .accordion-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        details.accordion-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--gold-dark);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            transition: border-color 0.2s ease;
+        }
+
+        details.accordion-card[open] {
+            border-color: var(--gold-primary);
+        }
+
+        summary.accordion-header {
+            font-family: 'Cinzel', serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--gold-light);
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(58, 48, 40, 0.4) 0%, rgba(26, 22, 24, 0.8) 100%);
+            user-select: none;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        summary.accordion-header::-webkit-details-marker { display: none; }
+
+        summary.accordion-header:hover {
+            background-color: var(--price-badge);
+            color: var(--gold-primary);
+        }
+
+        summary.accordion-header::after {
+            content: '►';
+            font-size: 0.9rem;
+            color: var(--gold-primary);
+            transition: transform 0.3s ease;
+        }
+
+        details[open] summary.accordion-header::after {
+            transform: rotate(90deg);
+        }
+
+        .accordion-body {
+            padding: 1.5rem;
+            border-top: 1px solid var(--card-border);
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .tier-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            color: var(--gold-primary);
+            margin-top: 1.2rem;
+            margin-bottom: 0.6rem;
+            text-transform: uppercase;
+            border-bottom: 1px dashed var(--card-border);
+            padding-bottom: 0.2rem;
+        }
+
+        .tier-title:first-child { margin-top: 0; }
+
+        .ability-list { list-style: none; }
+
+        .ability-item {
+            margin-bottom: 0.9rem;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0,0,0,0.15);
+            padding: 0.5rem 0.8rem;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .ability-item:last-child { margin-bottom: 0; }
+
+        .ability-info {
+            flex-grow: 1;
+        }
+
+        .ability-name {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            color: #fff;
+            display: block;
+            margin-bottom: 0.1rem;
+        }
+
+        .ability-desc { color: var(--text-muted); }
+
+        .btn-select-ability {
+            background: var(--price-badge);
+            border: 1px solid var(--gold-dark);
+            color: var(--gold-light);
+            padding: 0.3rem 0.7rem;
+            border-radius: 4px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .btn-select-ability:hover {
+            background: var(--gold-primary);
+            color: #000;
+            border-color: var(--gold-light);
+        }
+
+        /* Modal Overlay & Drawer Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: var(--card-bg);
+            border: 2px solid var(--gold-primary);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .modal-header {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            color: var(--gold-light);
+            border-bottom: 1px solid var(--gold-dark);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .close-btn:hover { color: #fff; }
+
+        /* Themed Input Fields for Modals */
+        .modal-input-group {
+            margin: 1.2rem 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .modal-input-label {
+            font-family: 'Cinzel', serif;
+            font-size: 0.95rem;
+            color: var(--gold-light);
+        }
+
+        .modal-input-field {
+            width: 100%;
+            box-sizing: border-box;
+            background: #0d0a0b;
+            border: 1px solid var(--gold-dark);
+            color: var(--gold-primary);
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 0.6rem 0.8rem;
+            border-radius: 4px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .modal-input-field:focus {
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+        }
+
+        .cart-list {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed var(--card-border);
+        }
+
+        .cart-item-title { font-size: 0.85rem; padding-right: 10px; }
+
+        .cart-item-price {
+            font-family: 'Cinzel', serif;
+            color: var(--gold-primary);
+        }
+
+        .btn-remove {
+            background: var(--accent-red);
+            border: none;
+            color: #fff;
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 0.8rem;
+        }
+
+        .cart-totals {
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            background: rgba(0,0,0,0.3);
+            padding: 0.8rem;
+            border-radius: 4px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.4rem;
+        }
+
+        .total-row.final {
+            border-top: 1px solid var(--gold-dark);
+            padding-top: 0.4rem;
+            font-weight: bold;
+            color: var(--gold-light);
+        }
+
+        .btn-checkout {
+            width: 100%;
+            background: linear-gradient(180deg, var(--gold-primary), var(--gold-dark));
+            border: 1px solid var(--gold-light);
+            color: #000;
+            padding: 0.8rem;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: filter 0.2s ease;
+        }
+
+        .btn-checkout:hover {
+            filter: brightness(1.2);
+        }
+
+        /* Receipt Modal Specifics */
+        textarea.receipt-box {
+            width: 100%;
+            height: 220px;
+            background: #0d0a0b;
+            color: var(--gold-light);
+            font-family: 'Courier New', Courier, monospace;
+            padding: 0.8rem;
+            border: 1px solid var(--gold-dark);
+            border-radius: 4px;
+            resize: none;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--card-border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-family: 'Cinzel', serif;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2.2rem; }
+            .item-grid { grid-template-columns: 1fr; }
+            summary.accordion-header { font-size: 1.1rem; padding: 0.8rem 1rem; }
+            .accordion-body { padding: 1rem; }
+            .top-navbar { padding: 0.5rem 1rem; }
+            .ability-item { flex-direction: column; align-items: flex-start; }
+            .btn-select-ability { width: 100%; margin-top: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- STICKY TOP BAR -->
+    <div class="top-navbar">
+        <div class="wallet-info">
+            <span>COINS: <span id="coin-balance-display" class="coin-display">0</span></span>
+            <button class="btn-small" onclick="promptSetCoins()">Edit Coins</button>
+        </div>
+        <button class="cart-trigger" onclick="openCart()">
+            🛒 Cart (<span id="cart-count">0</span>)
+        </button>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>General Store</h1>
+            <div class="subtitle">Adventurer Supply Catalog</div>
+        </header>
+
+        <div class="nav-quicklinks">
+            <a href="#price-10" class="quicklink">10 Coins</a>
+            <a href="#price-25" class="quicklink">25 Coins</a>
+            <a href="#price-35" class="quicklink">35 Coins</a>
+            <a href="#price-50" class="quicklink">50 Coins</a>
+            <a href="#price-75" class="quicklink">75 Coins</a>
+            <a href="#price-100" class="quicklink">100 Coins</a>
+            <a href="#price-150" class="quicklink">150 Coins</a>
+            <a href="#price-200" class="quicklink">200 Coins</a>
+            <a href="#price-250" class="quicklink">250 Coins</a>
+            <a href="#price-1000" class="quicklink">1000 Coins</a>
+            <a href="#price-5000" class="quicklink">5000 Coins</a>
+            <a href="#price-50000" class="quicklink">50000 Coins</a>
+            <a href="#milestones" class="quicklink highlight">Milestones</a>
+            <a href="#path-rewards" class="quicklink highlight">Path Rewards</a>
+        </div>
+
+        <main>
+            <!-- 10 COINS -->
+            <section id="price-10" class="price-section">
+                <h2 class="price-header">10 Coins Category</h2>
+                <div class="item-grid">
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Rations</div>
+                            <div class="item-price">10 Coins</div>
+                        </div>
+                        <div class="item-description">🍖 FOOD. Recover 1D4 HP. (FOOD is not beneficial to DYING players).</div>
+                        <button class="btn-add-cart" onclick="addToCart('Rations', 10)">Add to Cart</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 25 COINS -->
+            <section id="price-25" class="price-section">
+                <h2 class="price-header">25 Coins Category</h2>
+                <div class="item-grid">
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">RENOWN</div>
+                            <div class="item-price">25 Coins</div>
+                        </div>
+                        <div class="item-description">🎉 For each RENOWN you have, gain D10 COINS per SESSION during REST. (max 10)</div>
+                        <button class="btn-add-cart" onclick="addToCart('RENOWN', 25)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Simple Items</div>
+                            <div class="item-price">25 Coins</div>
+                        </div>
+                        <div class="item-description">🧰 Such as: oil, rope, nails, hammer, torches, flint, boots</div>
+                        <button class="btn-add-cart" onclick="addToCart('Simple Items', 25)">Add to Cart</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 35 COINS -->
+            <section id="price-35" class="price-section">
+                <h2 class="price-header">35 Coins Category</h2>
+                <div class="item-grid">
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Mini Healing Potion</div>
+                            <div class="item-price">35 Coins</div>
+                        </div>
+                        <div class="item-description">🧪 Recover 3 HP.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Mini Healing Potion', 35)">Add to Cart</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 50 COINS -->
+            <section id="price-50" class="price-section">
+                <h2 class="price-header">50 Coins Category</h2>
+                <div class="item-grid">
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Basic Bomb</div>
+                            <div class="item-price">50 Coins</div>
+                        </div>
+                        <div class="item-description">💣 Throw NEAR. ULTIMATE in a CLOSE radius. Set a D4 ROUND fuse or explode on impact.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Basic Bomb', 50)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Exploding Arrow/Bolt</div>
+                            <div class="item-price">50 Coins</div>
+                        </div>
+                        <div class="item-description">💣 ULT in a CLOSE radius.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Exploding Arrow/Bolt', 50)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Land Mine</div>
+                            <div class="item-price">50 Coins</div>
+                        </div>
+                        <div class="item-description">💣 TRAP, Explodes in a CLOSE radius for ULT damage when stepped on. Targets gets DEX save.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Land Mine', 50)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Potion of Healing [6 HP]</div>
+                            <div class="item-price">50 Coins</div>
+                        </div>
+                        <div class="item-description">🧪 Recover 6 HP.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Potion of Healing [6 HP]', 50)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Potion of Cleansing</div>
+                            <div class="item-price">50 Coins</div>
+                        </div>
+                        <div class="item-description">🧪 Removes negative effects such as blinded, deafened, paralyzed, cursed, and poisoned.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Potion of Cleansing', 50)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Potion of Virtue</div>
+                            <div class="item-price">50 Coins</div>
+                        </div>
+                        <div class="item-description">🧪 Remove ALL CORRUPTION counters and stabilizes a DYING character.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Potion of Virtue', 50)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Potion of Warmth</div>
+                            <div class="item-price">50 Coins</div>
+                        </div>
+                        <div class="item-description">🧪 Removes all COLD counters. Increases FROZEN condition to 20 COLD counters.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Potion of Warmth', 50)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Potion of Water Breathing</div>
+                            <div class="item-price">50 Coins</div>
+                        </div>
+                        <div class="item-description">🧪 Breath underwater for an extra 8 ROUNDS.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Potion of Water Breathing', 50)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Random Scroll or Potion</div>
+                            <div class="item-price">50 Coins</div>
+                        </div>
+                        <div class="item-description">📜🧪 SCROLLS require a roll to cast. POTIONS are free to chug. Incredibly random!</div>
+                        <button class="btn-add-cart" onclick="addToCart('Random Scroll or Potion', 50)">Add to Cart</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 75 COINS -->
+            <section id="price-75" class="price-section">
+                <h2 class="price-header">75 Coins Category</h2>
+                <div class="item-grid">
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Grenade</div>
+                            <div class="item-price">75 Coins</div>
+                        </div>
+                        <div class="item-description">💣 Throw NEAR. ULTIMATE in a NEAR radius. Set a D4 ROUND fuse or explode on impact.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Grenade', 75)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Alchemy Kit</div>
+                            <div class="item-price">75 Coins</div>
+                        </div>
+                        <div class="item-description">🧰❌ Use to combine RARE INGREDIANTS into potions.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Alchemy Kit', 75)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">COMMON SHIELD</div>
+                            <div class="item-price">75 Coins</div>
+                        </div>
+                        <div class="item-description">🛡️❌ +2 DEFENSE. If hit, sacrifice the shield to absorb all of any 1 attack.</div>
+                        <button class="btn-add-cart" onclick="addToCart('COMMON SHIELD', 75)">Add to Cart</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 100 COINS -->
+            <section id="price-100" class="price-section">
+                <h2 class="price-header">100 Coins Category</h2>
+                <div class="item-grid">
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Kinetic Capacitor</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">⚙️ MACHINE PART. Spend to add ULTIMATE effort when building or repairing.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Kinetic Capacitor', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Scroll: Light</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">📜 INT SPELL — Touch an object, glows and blinds evil creatures for D4 ROUNDS.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Scroll: Light', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Scroll: Healing Word</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">📜 WIS SPELL -- HEAL all allies within FAR radius 8 HP.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Scroll: Healing Word', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Scroll: Magic Weapon</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">📜 INT SPELL -- Touch a weapon to make it MAGIC until end of SESSION.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Scroll: Magic Weapon', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Potion of Regeneration</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">🧪 Heal D8 HP on your next 4 TURNS.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Potion of Regeneration', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Morningstar</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">⚔️❌ Targets hit are dazed and their rolls are HARD until your next TURN.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Morningstar', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Warhammer</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">⚔️❌ Hits of 5-10 damage destroy 1 point of enemy DEFENSE, 10+ stuns target.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Warhammer', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Iron Shield</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">🛡️❌ +3 DEFENSE. Uses 1 hand, occupies 2 inventory spaces.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Iron Shield', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Sword and Scabbard</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">⚔️❌ A trusty blade with sheath and sharpening kit.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Sword and Scabbard', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Battle Axe & Harness</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">⚔️❌ Huge chopping weapon. Great vs timbers, impossible to conceal.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Battle Axe & Harness', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Spearman's Kit</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">⚔️❌ 10ft oak shaft with swappable tip. Attack up to NEAR range.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Spearman\'s Kit', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Bow and Quiver</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">🏹❌ Recurve bow. Shoot NEAR & FAR.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Bow and Quiver', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Crossbow & Bolt Kit</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">🏹❌ Crits on 19 or 20. Shoot CLOSE & NEAR. FAR rolls are HARD.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Crossbow & Bolt Kit', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Great Sword</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">⚔️❌ Tremendous 5ft blade. Takes 3 slots, inflicts ULTIMATE damage.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Great Sword', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Knife Belt</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">🗡️❌ Holds 8 daggers/knives in concealed scabbards (includes 1 poison sheath).</div>
+                        <button class="btn-add-cart" onclick="addToCart('Knife Belt', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Knight's Weapon Kit</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">⚔️❌ Spiked mace and chain flail. Degrades target DEFENSE by 1 on hit.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Knight\'s Weapon Kit', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Exotic Weaponry</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">⚔️❌ Chain whips, nunchaku, segment staff, ring-sword, etc.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Exotic Weaponry', 100)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Dynamite</div>
+                            <div class="item-price">100 Coins</div>
+                        </div>
+                        <div class="item-description">💣 Throw NEAR. ULTIMATE in a FAR radius. Set a D4 ROUND fuse.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Dynamite', 100)">Add to Cart</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 150 COINS -->
+            <section id="price-150" class="price-section">
+                <h2 class="price-header">150 Coins Category</h2>
+                <div class="item-grid">
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Dynamite Bundle</div>
+                            <div class="item-price">150 Coins</div>
+                        </div>
+                        <div class="item-description">💣❌ Throw NEAR. ULTIMATE x2 in a FAR radius. On D4 ROUND fuse.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Dynamite Bundle', 150)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Prayer Book</div>
+                            <div class="item-price">150 Coins</div>
+                        </div>
+                        <div class="item-description">🔮❌ Contains prayers to each god. Pray once per SESSION using WIS.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Prayer Book', 150)">Add to Cart</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 200 COINS -->
+            <section id="price-200" class="price-section">
+                <h2 class="price-header">200 Coins Category</h2>
+                <div class="item-grid">
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Hand of Resurrection</div>
+                            <div class="item-price">200 Coins</div>
+                        </div>
+                        <div class="item-description">🔮❌ Raise 1 recently dead to 1 HEART. Destroyed if odd die result.</div>
+                        <button class="btn-add-cart" onclick="addToCart('Hand of Resurrection', 200)">Add to Cart</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 250 COINS -->
+            <section id="price-250" class="price-section">
+                <h2 class="price-header">250 Coins Category</h2>
+                <div class="item-grid">
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Character Type Milestone</div>
+                            <div class="item-price">250 Coins</div>
+                        </div>
+                        <div class="item-description">🏅 Gain a major milestone ability. Select from the milestones section below.</div>
+                        <button class="btn-add-cart" onclick="scrollToSection('milestones')">Go to Milestones</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">+1 STAT or EFFORT</div>
+                            <div class="item-price">250 Coins</div>
+                        </div>
+                        <div class="item-description">📈 Permanently add +1 to a STAT or EFFORT value.</div>
+                        <button class="btn-add-cart" onclick="addToCart('+1 STAT or EFFORT', 250)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Tier 1 Path Reward</div>
+                            <div class="item-price">250 Coins</div>
+                        </div>
+                        <div class="item-description">🏅 Unlock any Tier 1 Path Reward from below.</div>
+                        <button class="btn-add-cart" onclick="scrollToSection('path-rewards')">Go to Path Rewards</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 1000 COINS -->
+            <section id="price-1000" class="price-section">
+                <h2 class="price-header">1000 Coins Category</h2>
+                <div class="item-grid">
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">HEART STONE</div>
+                            <div class="item-price">1000 Coins</div>
+                        </div>
+                        <div class="item-description">💗❌ +10 MAX. HP</div>
+                        <button class="btn-add-cart" onclick="addToCart('HEART STONE', 1000)">Add to Cart</button>
+                    </div>
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Tier 2 Path Reward</div>
+                            <div class="item-price">1000 Coins</div>
+                        </div>
+                        <div class="item-description">🏅 Requires at least 2 REWARDS from Tier 1.</div>
+                        <button class="btn-add-cart" onclick="scrollToSection('path-rewards')">Go to Path Rewards</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5000 COINS -->
+            <section id="price-5000" class="price-section">
+                <h2 class="price-header">5000 Coins Category</h2>
+                <div class="item-grid">
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Tier 3 Path Reward</div>
+                            <div class="item-price">5000 Coins</div>
+                        </div>
+                        <div class="item-description">🏅 Requires at least 2 REWARDS from Tier 2.</div>
+                        <button class="btn-add-cart" onclick="scrollToSection('path-rewards')">Go to Path Rewards</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 50000 COINS -->
+            <section id="price-50000" class="price-section">
+                <h2 class="price-header">50000 Coins Category</h2>
+                <div class="item-grid">
+                    <div class="item-card">
+                        <div class="item-header">
+                            <div class="item-title">Tier 4 Path Reward</div>
+                            <div class="item-price">50000 Coins</div>
+                        </div>
+                        <div class="item-description">🏅 Requires at least 2 REWARDS from Tier 3.</div>
+                        <button class="btn-add-cart" onclick="scrollToSection('path-rewards')">Go to Path Rewards</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ACCORDION MILESTONES -->
+            <section id="milestones" class="milestone-section">
+                <h2 class="milestone-main-header">CHARACTER TYPE MILESTONES</h2>
+                <div class="accordion-container">
+                    
+                    <details class="accordion-card">
+                        <summary class="accordion-header">⚔️ WARRIOR</summary>
+                        <div class="accordion-body">
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">EVER STRONGER</span><span class="ability-desc">Add 1 to any STAT</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('WARRIOR', 'EVER STRONGER')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">POWER STRIKE</span><span class="ability-desc">On an attack roll of modified 15+, do your maximum EFFORT</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('WARRIOR', 'POWER STRIKE')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">INTERVENTION</span><span class="ability-desc">Once per ROUND, intercept an attack against a CLOSE ally</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('WARRIOR', 'INTERVENTION')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">ENDURANCE</span><span class="ability-desc">When RECOVERING, add 1D6 to the normal amount</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('WARRIOR', 'ENDURANCE')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">HURLER</span><span class="ability-desc">Use your STR to attack with any WEAPON as a thrown WEAPON</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('WARRIOR', 'HURLER')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">REVENGE</span><span class="ability-desc">Enemies you injure will only fight you until dead or defeated</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('WARRIOR', 'REVENGE')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">BERSERK</span><span class="ability-desc">Spend 1D4 HP to add an additional attack on your turn</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('WARRIOR', 'BERSERK')">+ Add (250 Coins)</button></li>
+                            </ul>
+                        </div>
+                    </details>
+
+                    <details class="accordion-card">
+                        <summary class="accordion-header">🏹 HUNTER</summary>
+                        <div class="accordion-body">
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">EVER STRONGER</span><span class="ability-desc">Add 1 to any STAT</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('HUNTER', 'EVER STRONGER')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">SPREAD SHOT</span><span class="ability-desc">Hit up to 3 targets CLOSE to each other, spend 1 TURN reloading</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('HUNTER', 'SPREAD SHOT')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">PIERCING AIM</span><span class="ability-desc">Your aimed shots penetrate up to 3 foes, continuing in a line</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('HUNTER', 'PIERCING AIM')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">FIREBUG</span><span class="ability-desc">Your traps and ammo inflict an additional 1D6 fire damage</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('HUNTER', 'FIREBUG')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">SCATTERSHOT</span><span class="ability-desc">Every attack you make inflicts an extra 1D4 on all NEAR enemies</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('HUNTER', 'SCATTERSHOT')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">LETHAL AIM</span><span class="ability-desc">Your aimed shots drop the target to 0 HP</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('HUNTER', 'LETHAL AIM')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">WHIP SHOT</span><span class="ability-desc">If an enemy is harmed at range, instantly roll an attack on it</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('HUNTER', 'WHIP SHOT')">+ Add (250 Coins)</button></li>
+                            </ul>
+                        </div>
+                    </details>
+
+                    <details class="accordion-card">
+                        <summary class="accordion-header">🗡️ SHADOW</summary>
+                        <div class="accordion-body">
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">EVER STRONGER</span><span class="ability-desc">Add 1 to any STAT or craft a blade for your Dagger Kit</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('SHADOW', 'EVER STRONGER')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">POISON BLADES</span><span class="ability-desc">After a blade attack, do the damage again the next ROUND</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('SHADOW', 'POISON BLADES')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">STICKY FINGERS</span><span class="ability-desc">If undetected, roll DEX to steal 1 item from a target unnoticed</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('SHADOW', 'STICKY FINGERS')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">GRAPPLE ARROW</span><span class="ability-desc">A light hook arrow to climb, pull, or catch yourself in a fall</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('SHADOW', 'GRAPPLE ARROW')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">BLADE STORM</span><span class="ability-desc">If an attack kills its target, make another attack instantly</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('SHADOW', 'BLADE STORM')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">SMOKE FORM</span><span class="ability-desc">Roll INT to use shadow magic. Become smoke for 1D4 ROUNDS</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('SHADOW', 'SMOKE FORM')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">DISAPPEAR</span><span class="ability-desc">Make a stealth roll even when in plain sight to simply vanish</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('SHADOW', 'DISAPPEAR')">+ Add (250 Coins)</button></li>
+                            </ul>
+                        </div>
+                    </details>
+
+                    <details class="accordion-card">
+                        <summary class="accordion-header">🎵 BARD</summary>
+                        <div class="accordion-body">
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">EVER STRONGER</span><span class="ability-desc">Add 1 to any STAT or Gain 100 coin</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('BARD', 'EVER STRONGER')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">BLOOD AND THUNDER</span><span class="ability-desc">With a CHA roll, grant 1 ally a critical hit next roll</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('BARD', 'BLOOD AND THUNDER')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">TO THE PAIN</span><span class="ability-desc">When dueling, roll opposed CHA to send your foe fleeing in fear</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('BARD', 'TO THE PAIN')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">THE TROUPE</span><span class="ability-desc">Roll CHA to summon an old colleague to your aid</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('BARD', 'THE TROUPE')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">DIRGE OF FEAR</span><span class="ability-desc">Roll CHA to prevent all enemy critical hits for 1 ROUND</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('BARD', 'DIRGE OF FEAR')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">NEMESIS</span><span class="ability-desc">Choose a Nemesis in battle. When it is killed, heal to full HP</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('BARD', 'NEMESIS')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">THE PRESTIGE</span><span class="ability-desc">Roll CHA to create realistic effects like teleportation/clones</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('BARD', 'THE PRESTIGE')">+ Add (250 Coins)</button></li>
+                            </ul>
+                        </div>
+                    </details>
+
+                    <details class="accordion-card">
+                        <summary class="accordion-header">🔮 MAGE</summary>
+                        <div class="accordion-body">
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">EVER STRONGER</span><span class="ability-desc">Add 1 to any STAT or learn 1 new INT SPELL</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('MAGE', 'EVER STRONGER')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">GLYPH MAKER</span><span class="ability-desc">Roll INT to store a SPELL in an etched symbol triggered by touch</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('MAGE', 'GLYPH MAKER')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">BEND MAGIC</span><span class="ability-desc">Once per encounter, roll INT to redirect an enemy SPELL</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('MAGE', 'BEND MAGIC')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">PALE CLONE</span><span class="ability-desc">Roll INT to form a 1 HP clone of yourself from thin air</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('MAGE', 'PALE CLONE')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">MAGIC THEORIST</span><span class="ability-desc">Roll HARD INT to modify or create SPELLS</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('MAGE', 'MAGIC THEORIST')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">PRIMAL FORM</span><span class="ability-desc">Become fire, air, or water for 1D4 ROUNDS</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('MAGE', 'PRIMAL FORM')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">SUMMONER</span><span class="ability-desc">Roll INT to conjure a monster you know</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('MAGE', 'SUMMONER')">+ Add (250 Coins)</button></li>
+                            </ul>
+                        </div>
+                    </details>
+
+                    <details class="accordion-card">
+                        <summary class="accordion-header">✨ PRIEST</summary>
+                        <div class="accordion-body">
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">EVER STRONGER</span><span class="ability-desc">Add 1 to any STAT or learn 1 new WIS SPELL</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('PRIEST', 'EVER STRONGER')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">STORMCALLER</span><span class="ability-desc">When outdoors, your WIS SPELLS also heal all allies for 1 HP</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('PRIEST', 'STORMCALLER')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">RADIANT POWER</span><span class="ability-desc">Your single target healing SPELLS now heal up to 3 targets</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('PRIEST', 'RADIANT POWER')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">IRON FIST</span><span class="ability-desc">Unarmed strikes deal WEAPON damage</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('PRIEST', 'IRON FIST')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">ATTUNED</span><span class="ability-desc">Immune to nature and weather magic</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('PRIEST', 'ATTUNED')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">CHOSEN ONE</span><span class="ability-desc">1 chosen ally cannot fall below 1 HP while you live</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('PRIEST', 'CHOSEN ONE')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">MASTER</span><span class="ability-desc">Inflict MAGIC EFFORT unarmed. 10+ damage lets you cast a WIS SPELL free</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('PRIEST', 'MASTER')">+ Add (250 Coins)</button></li>
+                            </ul>
+                        </div>
+                    </details>
+
+                    <details class="accordion-card">
+                        <summary class="accordion-header">🌿 WILDLING</summary>
+                        <div class="accordion-body">
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">EVEN STRONGER</span><span class="ability-desc">Add 1 to any STAT or roll on SHABBY LOOT table</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('WILDLING', 'EVEN STRONGER')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">LUCKY FISHTAIL</span><span class="ability-desc">A Natural 2 is also a critical success</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('WILDLING', 'LUCKY FISHTAIL')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">WARDEN WAND</span><span class="ability-desc">Gain 2 WIS SPELLS; wand spells deal ULTIMATE effort</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('WILDLING', 'WARDEN WAND')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">SOFT LANDING</span><span class="ability-desc">Never roll damage when falling</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('WILDLING', 'SOFT LANDING')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">GLOWING SWORD</span><span class="ability-desc">Enchanted blade reduces target's checks by 1 when unsheathed</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('WILDLING', 'GLOWING SWORD')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">SONG OF THE TREE</span><span class="ability-desc">Allies hear song and RECOVER using CON + ULTIMATE bonus</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('WILDLING', 'SONG OF THE TREE')">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">SONG OF THE ROCK</span><span class="ability-desc">Increase allies' DEF by your BASIC bonus for D4 ROUNDS</span></div><button class="btn-select-ability" onclick="addMilestoneToCart('WILDLING', 'SONG OF THE ROCK')">+ Add (250 Coins)</button></li>
+                            </ul>
+                        </div>
+                    </details>
+
+                </div>
+            </section>
+
+            <!-- ACCORDION PATH REWARDS -->
+            <section id="path-rewards" class="path-rewards-section">
+                <h2 class="path-main-header">PATH REWARDS</h2>
+                <div class="accordion-container">
+
+                    <!-- PATH OF IRON -->
+                    <details class="accordion-card">
+                        <summary class="accordion-header">🛡️ PATH OF IRON</summary>
+                        <div class="accordion-body">
+                            <h4 class="tier-title">TIER 1 REWARDS (250 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">MARK OF THE FALCON</span><span class="ability-desc">CON rolls are EASY.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF IRON', 'MARK OF THE FALCON', 'CON rolls are EASY.', 250)">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">DURANIUM SIGNET</span><span class="ability-desc">Ignore 1D4 damage done to you once per ROUND.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF IRON', 'DURANIUM SIGNET', 'Ignore 1D4 damage done to you once per ROUND.', 250)">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">KIT OF SPIKES</span><span class="ability-desc">Even when you MISS in melee, deal 1D4 damage to target.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF IRON', 'KIT OF SPIKES', 'Even when you MISS in melee, deal 1D4 damage to target.', 250)">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">WAR CALLER</span><span class="ability-desc">Force all enemies within FAR radius to fixate on you for 1D4 ROUNDS.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF IRON', 'WAR CALLER', 'Force all enemies within FAR radius to fixate on you for 1D4 ROUNDS.', 250)">+ Add (250 Coins)</button></li>
+                            </ul>
+
+                            <h4 class="tier-title">TIER 2 REWARDS (1,000 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">YOG WHETSTONE</span><span class="ability-desc">Edged ULT damage causes 1D4 bleed for 3 ROUNDS.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF IRON', 'YOG WHETSTONE', 'Edged ULT damage causes 1D4 bleed for 3 ROUNDS.', 1000)">+ Add (1,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">THE LAST DAGGER</span><span class="ability-desc">Indestructible MAGIC weapon. If lost, returns in 1D4 ROUNDS.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF IRON', 'THE LAST DAGGER', 'Indestructible MAGIC weapon. If lost, returns in 1D4 ROUNDS.', 1000)">+ Add (1,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">SHIELD HARNESS</span><span class="ability-desc">Never drop shield. Failed enemy ranged attacks ricochet back.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF IRON', 'SHIELD HARNESS', 'Never drop shield. Failed enemy ranged attacks ricochet back.', 1000)">+ Add (1,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">WAR CHAIN</span><span class="ability-desc">Attached weapon can be thrown and instantly returned.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF IRON', 'WAR CHAIN', 'Attached weapon can be thrown and instantly returned.', 1000)">+ Add (1,000 Coins)</button></li>
+                            </ul>
+
+                            <h4 class="tier-title">TIER 3 REWARDS (5,000 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">BUCKLE KIT</span><span class="ability-desc">Heal 3 HP with a touch and WIS CHECK.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF IRON', 'BUCKLE KIT', 'Heal 3 HP with a touch and WIS CHECK.', 5000)">+ Add (5,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">FIGHTER'S GEM</span><span class="ability-desc">Add STRENGTH to WEAPON EFFORT.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF IRON', 'FIGHTER\'S GEM', 'Add STRENGTH to WEAPON EFFORT.', 5000)">+ Add (5,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">WORLD BREAKER</span><span class="ability-desc">Natural 15+ vs stone completely destroys structure.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF IRON', 'WORLD BREAKER', 'Natural 15+ vs stone completely destroys structure.', 5000)">+ Add (5,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">STAR SPLINTERS</span><span class="ability-desc">Cannot be moved against your will except by gravity.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF IRON', 'STAR SPLINTERS', 'Cannot be moved against your will except by gravity.', 5000)">+ Add (5,000 Coins)</button></li>
+                            </ul>
+
+                            <h4 class="tier-title">TIER 4 REWARDS (50,000 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">LIFE DRINKER</span><span class="ability-desc">Supreme custom weapon: always ULT damage & heals 1D4 HP on hit.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF IRON', 'LIFE DRINKER', 'Supreme custom weapon: always ULT damage & heals 1D4 HP on hit.', 50000)">+ Add (50,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">DURANIUM HAND</span><span class="ability-desc">Holds 3 INT spells, adds +5 ARMOR and +3 STR.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF IRON', 'DURANIUM HAND', 'Holds 3 INT spells, adds +5 ARMOR and +3 STR.', 50000)">+ Add (50,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">THE IRON WILL</span><span class="ability-desc">Attack again on kill, crit, or when dealing 10+ damage.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF IRON', 'THE IRON WILL', 'Attack again on kill, crit, or when dealing 10+ damage.', 50000)">+ Add (50,000 Coins)</button></li>
+                            </ul>
+                        </div>
+                    </details>
+
+                    <!-- PATH OF SMOKE -->
+                    <details class="accordion-card">
+                        <summary class="accordion-header">🌫️ PATH OF SMOKE</summary>
+                        <div class="accordion-body">
+                            <h4 class="tier-title">TIER 1 REWARDS (250 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">MARK OF THE SERPENT</span><span class="ability-desc">Immune to normal venom. Create Slow/Paralysis/Blindness poisons.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF SMOKE', 'MARK OF THE SERPENT', 'Immune to normal venom. Create Slow/Paralysis/Blindness poisons.', 250)">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">THE EBONY HOOD</span><span class="ability-desc">Enemies avoid targeting you unless no other options exist.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF SMOKE', 'THE EBONY HOOD', 'Enemies avoid targeting you unless no other options exist.', 250)">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">INT SPELL: SHROUD</span><span class="ability-desc">Stationary target is completely invisible for 1D4 ROUNDS.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF SMOKE', 'INT SPELL: SHROUD', 'Stationary target is completely invisible for 1D4 ROUNDS.', 250)">+ Add (250 Coins)</button></li>
+                            </ul>
+
+                            <h4 class="tier-title">TIER 2 REWARDS (1,000 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">EYE OF THE BEYONDER</span><span class="ability-desc">See heat, magic, truth in illusions, and glimpse through walls.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF SMOKE', 'EYE OF THE BEYONDER', 'See heat, magic, truth in illusions, and glimpse through walls.', 1000)">+ Add (1,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">SHADOW KNIVES</span><span class="ability-desc">Infinite magic throwing daggers materialize in sheath.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF SMOKE', 'SHADOW KNIVES', 'Infinite magic throwing daggers materialize in sheath.', 1000)">+ Add (1,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">MASTERWORK TRAP KIT</span><span class="ability-desc">Trap ATTEMPTS are EASY; construct elaborate traps.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF SMOKE', 'MASTERWORK TRAP KIT', 'Trap ATTEMPTS are EASY; construct elaborate traps.', 1000)">+ Add (1,000 Coins)</button></li>
+                            </ul>
+
+                            <h4 class="tier-title">TIER 3 REWARDS (5,000 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">SWARMER DART</span><span class="ability-desc">Splits into 1D6 darts hitting up to 6 targets in one attack.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF SMOKE', 'SWARMER DART', 'Splits into 1D6 darts hitting up to 6 targets in one attack.', 5000)">+ Add (5,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">CLOCKWORK WORM</span><span class="ability-desc">Mechanical snake follower that accepts basic commands.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF SMOKE', 'CLOCKWORK WORM', 'Mechanical snake follower that accepts basic commands.', 5000)">+ Add (5,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">MARK OF KRONO</span><span class="ability-desc">Hold one GM TIMER at bay for 1 ROUND on HARD INT check.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF SMOKE', 'MARK OF KRONO', 'Hold one GM TIMER at bay for 1 ROUND on HARD INT check.', 5000)">+ Add (5,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">INT SPELL: DARKHEART</span><span class="ability-desc">Divine target's vulnerabilities with a touch.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF SMOKE', 'INT SPELL: DARKHEART', 'Divine target\'s vulnerabilities with a touch.', 5000)">+ Add (5,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">WIS SPELL: FOG</span><span class="ability-desc">Become mist for up to 4 ROUNDS.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF SMOKE', 'WIS SPELL: FOG', 'Become mist for up to 4 ROUNDS.', 5000)">+ Add (5,000 Coins)</button></li>
+                            </ul>
+
+                            <h4 class="tier-title">TIER 4 REWARDS (50,000 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">CRYSTAL OF DOORS</span><span class="ability-desc">Open doorway to any remembered location.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF SMOKE', 'CRYSTAL OF DOORS', 'Open doorway to any remembered location.', 50000)">+ Add (50,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">MARK OF DEATH</span><span class="ability-desc">Dealing 12+ damage forces CON save or instant 0 HP.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF SMOKE', 'MARK OF DEATH', 'Dealing 12+ damage forces CON save or instant 0 HP.', 50000)">+ Add (50,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">DEMON BOND RING</span><span class="ability-desc">Guarded by 2 HEART demon beast upon low HP or summon.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF SMOKE', 'DEMON BOND RING', 'Guarded by 2 HEART demon beast upon low HP or summon.', 50000)">+ Add (50,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">INT SPELL: WINDOW TO VOID</span><span class="ability-desc">Portal to timeless void dimension for unlimited storage.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF SMOKE', 'INT SPELL: WINDOW TO VOID', 'Portal to timeless void dimension for unlimited storage.', 50000)">+ Add (50,000 Coins)</button></li>
+                            </ul>
+                        </div>
+                    </details>
+
+                    <!-- PATH OF AMBER -->
+                    <details class="accordion-card">
+                        <summary class="accordion-header">✨ PATH OF AMBER</summary>
+                        <div class="accordion-body">
+                            <h4 class="tier-title">TIER 1 REWARDS (250 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">LIBRUM ARCANO</span><span class="ability-desc">Spellcasting rolls of 15+ are CRITICAL hits.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF AMBER', 'LIBRUM ARCANO', 'Spellcasting rolls of 15+ are CRITICAL hits.', 250)">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">ELEMENTITE EYE</span><span class="ability-desc">Choose 1 element; magic effects with it are doubled.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF AMBER', 'ELEMENTITE EYE', 'Choose 1 element; magic effects with it are doubled.', 250)">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">INT SPELL: SPELL NOVA</span><span class="ability-desc">Next turn's spell explodes in NEAR radius and is critical.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF AMBER', 'INT SPELL: SPELL NOVA', 'Next turn\'s spell explodes in NEAR radius and is critical.', 250)">+ Add (250 Coins)</button></li>
+                            </ul>
+
+                            <h4 class="tier-title">TIER 2 REWARDS (1,000 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">INT SPELL: ILLUSION</span><span class="ability-desc">Conjure realistic illusions for 1D4 rounds or sustained focus.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF AMBER', 'INT SPELL: ILLUSION', 'Conjure realistic illusions for 1D4 rounds or sustained focus.', 1000)">+ Add (1,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">INT SPELL: LIFE</span><span class="ability-desc">Animate dead or object for 1D4 rounds.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF AMBER', 'INT SPELL: LIFE', 'Animate dead or object for 1D4 rounds.', 1000)">+ Add (1,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">INT SPELL: DEATH</span><span class="ability-desc">Kill target with <=2 HEARTS outright unless CON saved.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF AMBER', 'INT SPELL: DEATH', 'Kill target with <=2 HEARTS outright unless CON saved.', 1000)">+ Add (1,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">MARK OF LOKUS</span><span class="ability-desc">Arm transforms into a terrifying MAGIC WEAPON.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF AMBER', 'MARK OF LOKUS', 'Arm transforms into a terrifying MAGIC WEAPON.', 1000)">+ Add (1,000 Coins)</button></li>
+                            </ul>
+
+                            <h4 class="tier-title">TIER 3 REWARDS (5,000 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">AMULET OF INFERNALS</span><span class="ability-desc">Command demons or summon 1D4 infernals.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF AMBER', 'AMULET OF INFERNALS', 'Command demons or summon 1D4 infernals.', 5000)">+ Add (5,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">INT SPELL: RAVEN</span><span class="ability-desc">Transform into or conjure 1 to 10 ravens.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF AMBER', 'INT SPELL: RAVEN', 'Transform into or conjure 1 to 10 ravens.', 5000)">+ Add (5,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">INT SPELL: WARDEN</span><span class="ability-desc">Imbue target plant/beast with double HEARTS and double EFFORT.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF AMBER', 'INT SPELL: WARDEN', 'Imbue target plant/beast with double HEARTS and double EFFORT.', 5000)">+ Add (5,000 Coins)</button></li>
+                            </ul>
+
+                            <h4 class="tier-title">TIER 4 REWARDS (50,000 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">MAGE'S HAND</span><span class="ability-desc">Key prosthesis to the Glyph of Iridess.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF AMBER', 'MAGE\'S HAND', 'Key prosthesis to the Glyph of Iridess.', 50000)">+ Add (50,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">FORMLESS RING</span><span class="ability-desc">Reroll formless magic ATTEMPTS.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF AMBER', 'FORMLESS RING', 'Reroll formless magic ATTEMPTS.', 50000)">+ Add (50,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">INT SPELL: FOUNDATION</span><span class="ability-desc">Raise colossal 1-mile elemental towers.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF AMBER', 'INT SPELL: FOUNDATION', 'Raise colossal 1-mile elemental towers.', 50000)">+ Add (50,000 Coins)</button></li>
+                            </ul>
+                        </div>
+                    </details>
+
+                    <!-- PATH OF OAK -->
+                    <details class="accordion-card">
+                        <summary class="accordion-header">🍃 PATH OF OAK</summary>
+                        <div class="accordion-body">
+                            <h4 class="tier-title">TIER 1 REWARDS (250 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">GREEN BARK</span><span class="ability-desc">+3 ARMOR; camouflage renders user near invisible.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF OAK', 'GREEN BARK', '+3 ARMOR; camouflage renders user near invisible.', 250)">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">FEATHER OF ARAK</span><span class="ability-desc">Take bird shape for 1D4 ROUNDS.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF OAK', 'FEATHER OF ARAK', 'Take bird shape for 1D4 ROUNDS.', 250)">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">GREENBOW</span><span class="ability-desc">Magic longbow; infinite arrows grow into trees on impact.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF OAK', 'GREENBOW', 'Magic longbow; infinite arrows grow into trees on impact.', 250)">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">WIS SPELL: WILD CALL</span><span class="ability-desc">Call nearby wild animals within 1 mile.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF OAK', 'WIS SPELL: WILD CALL', 'Call nearby wild animals within 1 mile.', 250)">+ Add (250 Coins)</button></li>
+                            </ul>
+
+                            <h4 class="tier-title">TIER 2 REWARDS (1,000 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">RAZOR VINE</span><span class="ability-desc">FAR reach vine bracer; grappling/pulling rolls are EASY.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF OAK', 'RAZOR VINE', 'FAR reach vine bracer; grappling/pulling rolls are EASY.', 1000)">+ Add (1,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">SEEDS OF AT'AR</span><span class="ability-desc">Single-use seeds trigger colossal 5-mile nature explosion.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF OAK', 'SEEDS OF AT\'AR', 'Single-use seeds trigger colossal 5-mile nature explosion.', 1000)">+ Add (1,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">WIS SPELL: STICK MAN</span><span class="ability-desc">Construct a 12ft, 3 HEART stick construct follower.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF OAK', 'WIS SPELL: STICK MAN', 'Construct a 12ft, 3 HEART stick construct follower.', 1000)">+ Add (1,000 Coins)</button></li>
+                            </ul>
+
+                            <h4 class="tier-title">TIER 3 REWARDS (5,000 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">GREENKIN GLOVES</span><span class="ability-desc">+3 ARMOR; climb natural surfaces automatically.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF OAK', 'GREENKIN GLOVES', '+3 ARMOR; climb natural surfaces automatically.', 5000)">+ Add (5,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">SKULL OF ORMO</span><span class="ability-desc">+2 ARMOR; reroll low EFFORT (<=4) on WIS spells.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF OAK', 'SKULL OF ORMO', '+2 ARMOR; reroll low EFFORT (<=4) on WIS spells.', 5000)">+ Add (5,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">WIS SPELL: WARD</span><span class="ability-desc">Forcefully separate two touching entities with focus.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF OAK', 'WIS SPELL: WARD', 'Forcefully separate two touching entities with focus.', 5000)">+ Add (5,000 Coins)</button></li>
+                            </ul>
+
+                            <h4 class="tier-title">TIER 4 REWARDS (50,000 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">GREENHEART</span><span class="ability-desc">Revive from 0 HP in 1D4 rounds, or regrow in 1D4 days.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF OAK', 'GREENHEART', 'Revive from 0 HP in 1D4 rounds, or regrow in 1D4 days.', 50000)">+ Add (50,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">QUIVER OF 1000 ARROWS</span><span class="ability-desc">Manifest custom magical arrows on command.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF OAK', 'QUIVER OF 1000 ARROWS', 'Manifest custom magical arrows on command.', 50000)">+ Add (50,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">STAFF OF PINES</span><span class="ability-desc">Instantly grow up to 10 giant pine trees anywhere.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF OAK', 'STAFF OF PINES', 'Instantly grow up to 10 giant pine trees anywhere.', 50000)">+ Add (50,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">STAFF OF STORMS</span><span class="ability-desc">Cast LIGHTNING BOLT at maximum damage every time.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF OAK', 'STAFF OF STORMS', 'Cast LIGHTNING BOLT at maximum damage every time.', 50000)">+ Add (50,000 Coins)</button></li>
+                            </ul>
+                        </div>
+                    </details>
+
+                    <!-- PATH OF THE HAWK -->
+                    <details class="accordion-card">
+                        <summary class="accordion-header">🦅 PATH OF THE HAWK</summary>
+                        <div class="accordion-body">
+                            <h4 class="tier-title">TIER 1 REWARDS (250 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">ELEMENTAL AMMO</span><span class="ability-desc">Imbue shots with fire, ice, stone, or metal.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF THE HAWK', 'ELEMENTAL AMMO', 'Imbue shots with fire, ice, stone, or metal.', 250)">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">MARKSMAN'S GLOVES</span><span class="ability-desc">Prevents disarming of ranged weapons.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF THE HAWK', 'MARKSMAN\'S GLOVES', 'Prevents disarming of ranged weapons.', 250)">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">WEAPON RUCK</span><span class="ability-desc">Carry up to 20 ranged weapons in 1 CARRY slot.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF THE HAWK', 'WEAPON RUCK', 'Carry up to 20 ranged weapons in 1 CARRY slot.', 250)">+ Add (250 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">CRYSTAL FLARE</span><span class="ability-desc">Tag target with glowing magnesium spark for 1D6 ROUNDS.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(1, 'PATH OF THE HAWK', 'CRYSTAL FLARE', 'Tag target with glowing magnesium spark for 1D6 ROUNDS.', 250)">+ Add (250 Coins)</button></li>
+                            </ul>
+
+                            <h4 class="tier-title">TIER 2 REWARDS (1,000 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">SPLIT SHOT</span><span class="ability-desc">Make shot HARD to split arrow/bolt into two targets.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF THE HAWK', 'SPLIT SHOT', 'Make shot HARD to split arrow/bolt into two targets.', 1000)">+ Add (1,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">GRAV AMMO</span><span class="ability-desc">Tag target to make all subsequent party shots EASY.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF THE HAWK', 'GRAV AMMO', 'Tag target to make all subsequent party shots EASY.', 1000)">+ Add (1,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">RING OF RICOCHET</span><span class="ability-desc">Bounce shots off up to 6 surfaces to hit targets.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(2, 'PATH OF THE HAWK', 'RING OF RICOCHET', 'Bounce shots off up to 6 surfaces to hit targets.', 1000)">+ Add (1,000 Coins)</button></li>
+                            </ul>
+
+                            <h4 class="tier-title">TIER 3 REWARDS (5,000 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">REAPER AMMO</span><span class="ability-desc">Shots pierce targets in a straight 1-mile line.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF THE HAWK', 'REAPER AMMO', 'Shots pierce targets in a straight 1-mile line.', 5000)">+ Add (5,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">REFRACTOR CLOAK</span><span class="ability-desc">50% chance (4-6 on 1d6) to deflect incoming missiles.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF THE HAWK', 'REFRACTOR CLOAK', '50% chance (4-6 on 1d6) to deflect incoming missiles.', 5000)">+ Add (5,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">BLOOD SIGHTS</span><span class="ability-desc">Examine target for 1 turn to reveal key structural weak point.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(3, 'PATH OF THE HAWK', 'BLOOD SIGHTS', 'Examine target for 1 turn to reveal key structural weak point.', 5000)">+ Add (5,000 Coins)</button></li>
+                            </ul>
+
+                            <h4 class="tier-title">TIER 4 REWARDS (50,000 COINS)</h4>
+                            <ul class="ability-list">
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">MASTERWORK WEAPON KIT</span><span class="ability-desc">+4 EFFORT to chosen ranged weapon.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF THE HAWK', 'MASTERWORK WEAPON KIT', '+4 EFFORT to chosen ranged weapon.', 50000)">+ Add (50,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">CHAIN REACTOR</span><span class="ability-desc">Damage > 3 triggers recursive extra damage rolls.</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF THE HAWK', 'CHAIN REACTOR', 'Damage > 3 triggers recursive extra damage rolls.', 50000)">+ Add (50,000 Coins)</button></li>
+                                <li class="ability-item"><div class="ability-info"><span class="ability-name">KRELL WEAPON MODULE</span><span class="ability-desc">Morphing ultimate ranged weapon (+1D20 damage, infinite ammo).</span></div><button class="btn-select-ability" onclick="addPathRewardToCart(4, 'PATH OF THE HAWK', 'KRELL WEAPON MODULE', 'Morphing ultimate ranged weapon (+1D20 damage, infinite ammo).', 50000)">+ Add (50,000 Coins)</button></li>
+                            </ul>
+                        </div>
+                    </details>
+
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Prices subject to change by order of the Storekeeper • Handcrafted for Adventurers</p>
+        </footer>
+    </div>
+
+    <!-- COIN PROMPT MODAL -->
+    <div id="coin-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span>🪙 Adventurer Wallet</span>
+                <button class="close-btn" onclick="closeCoinPrompt()">&times;</button>
+            </div>
+            <div class="modal-input-group">
+                <label for="coin-input" class="modal-input-label">Enter your current COIN balance:</label>
+                <input type="number" id="coin-input" class="modal-input-field" min="0" placeholder="0">
+            </div>
+            <button class="btn-checkout" onclick="saveCoinsFromPrompt()">Confirm Balance</button>
+        </div>
+    </div>
+
+    <!-- CART MODAL -->
+    <div id="cart-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span>🛒 Shopping Cart</span>
+                <button class="close-btn" onclick="closeCart()">&times;</button>
+            </div>
+            <div id="cart-items-container" class="cart-list">
+                <!-- Items populated by JS -->
+            </div>
+            <div class="cart-totals">
+                <div class="total-row">
+                    <span>Starting Balance:</span>
+                    <span id="cart-start-coins">0 Coins</span>
+                </div>
+                <div class="total-row">
+                    <span>Cart Total:</span>
+                    <span id="cart-total-cost" style="color: var(--accent-red);">0 Coins</span>
+                </div>
+                <div class="total-row final">
+                    <span>Remaining Balance:</span>
+                    <span id="cart-remaining-coins">0 Coins</span>
+                </div>
+            </div>
+            <button class="btn-checkout" onclick="processCheckout()">Checkout & Generate Receipt</button>
+        </div>
+    </div>
+
+    <!-- RECEIPT MODAL -->
+    <div id="receipt-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span>📜 Transaction Receipt</span>
+                <button class="close-btn" onclick="closeReceipt()">&times;</button>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Copy and paste the text below into an email or message:</p>
+            <textarea id="receipt-text" class="receipt-box" readonly></textarea>
+            <button class="btn-checkout" onclick="copyReceiptText()">Copy Receipt to Clipboard</button>
+        </div>
+    </div>
+
+    <script>
+        // Shopping State
+        let startingCoins = 0;
+        let cart = [];
+
+        // Open Wallet Modal on Load
+        window.addEventListener('DOMContentLoaded', () => {
+            promptSetCoins();
+        });
+
+        function promptSetCoins() {
+            const coinInput = document.getElementById('coin-input');
+            coinInput.value = startingCoins || '';
+            document.getElementById('coin-modal').classList.add('active');
+            setTimeout(() => coinInput.focus(), 100);
+        }
+
+        function closeCoinPrompt() {
+            document.getElementById('coin-modal').classList.remove('active');
+        }
+
+        function saveCoinsFromPrompt() {
+            const inputVal = document.getElementById('coin-input').value.trim();
+            const parsedVal = parseInt(inputVal, 10);
+            
+            if (!isNaN(parsedVal) && parsedVal >= 0) {
+                startingCoins = parsedVal;
+            } else {
+                startingCoins = 0;
+            }
+            
+            updateWalletUI();
+            closeCoinPrompt();
+        }
+
+        function updateWalletUI() {
+            document.getElementById('coin-balance-display').innerText = startingCoins.toLocaleString();
+            updateCartUI();
+        }
+
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function addToCart(itemName, price) {
+            cart.push({ id: Date.now(), name: itemName, price: price });
+            updateCartUI();
+            
+            // Subtle feedback
+            let cartBtn = document.querySelector('.cart-trigger');
+            cartBtn.style.transform = 'scale(1.1)';
+            setTimeout(() => cartBtn.style.transform = 'scale(1)', 150);
+        }
+
+        function addMilestoneToCart(className, milestoneName) {
+            const formattedName = `Character Type Milestone - ${className}: ${milestoneName}`;
+            addToCart(formattedName, 250);
+        }
+
+        function addPathRewardToCart(tier, pathName, rewardName, effect, cost) {
+            const formattedName = `Tier ${tier} Path Reward. ${pathName} - ${rewardName}: ${effect}`;
+            addToCart(formattedName, cost);
+        }
+
+        function removeFromCart(itemId) {
+            cart = cart.filter(item => item.id !== itemId);
+            updateCartUI();
+        }
+
+        function getCartTotal() {
+            return cart.reduce((sum, item) => sum + item.price, 0);
+        }
+
+        function updateCartUI() {
+            document.getElementById('cart-count').innerText = cart.length;
+            
+            const container = document.getElementById('cart-items-container');
+            container.innerHTML = '';
+
+            if (cart.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1rem;">Your cart is empty.</div>`;
+            } else {
+                cart.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'cart-item';
+                    row.innerHTML = `
+                        <span class="cart-item-title">${item.name}</span>
+                        <div style="display: flex; align-items: center;">
+                            <span class="cart-item-price">${item.price.toLocaleString()} Coins</span>
+                            <button class="btn-remove" onclick="removeFromCart(${item.id})">✕</button>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+
+            const total = getCartTotal();
+            const remaining = startingCoins - total;
+
+            document.getElementById('cart-start-coins').innerText = startingCoins.toLocaleString() + ' Coins';
+            document.getElementById('cart-total-cost').innerText = total.toLocaleString() + ' Coins';
+            
+            const remainingElem = document.getElementById('cart-remaining-coins');
+            remainingElem.innerText = remaining.toLocaleString() + ' Coins';
+            
+            if (remaining < 0) {
+                remainingElem.style.color = 'var(--accent-red)';
+            } else {
+                remainingElem.style.color = 'var(--gold-light)';
+            }
+        }
+
+        function openCart() {
+            document.getElementById('cart-modal').classList.add('active');
+        }
+
+        function closeCart() {
+            document.getElementById('cart-modal').classList.remove('active');
+        }
+
+        function closeReceipt() {
+            document.getElementById('receipt-modal').classList.remove('active');
+        }
+
+        function processCheckout() {
+            if (cart.length === 0) {
+                alert("Your cart is completely empty!");
+                return;
+            }
+
+            const total = getCartTotal();
+            if (total > startingCoins) {
+                alert("You do not have enough COINS to purchase these items!");
+                return;
+            }
+
+            const remaining = startingCoins - total;
+            const dateStr = new Date().toLocaleDateString();
+
+            // Build Receipt Text
+            let receipt = `===================================\n`;
+            let title = `        GENERAL STORE RECEIPT       \n`;
+            receipt += title;
+            receipt += `Date: ${dateStr}\n`;
+            receipt += `===================================\n\n`;
+            receipt += `STARTING BALANCE : ${startingCoins.toLocaleString()} Coins\n\n`;
+            receipt += `PURCHASED ITEMS:\n`;
+
+            // Grouping identical items for a clean receipt
+            const itemCounts = {};
+            cart.forEach(item => {
+                if (!itemCounts[item.name]) {
+                    itemCounts[item.name] = { count: 0, unitPrice: item.price };
+                }
+                itemCounts[item.name].count += 1;
+            });
+
+            for (const [name, data] of Object.entries(itemCounts)) {
+                let itemTotal = data.count * data.unitPrice;
+                receipt += `- ${name} (x${data.count}) : ${itemTotal.toLocaleString()} Coins\n`;
+            }
+
+            receipt += `\n-----------------------------------\n`;
+            receipt += `TOTAL SPENT      : ${total.toLocaleString()} Coins\n`;
+            receipt += `REMAINING COINS  : ${remaining.toLocaleString()} Coins\n`;
+            receipt += `===================================\n`;
+            receipt += `   Thank you for your business!    `;
+
+            document.getElementById('receipt-text').value = receipt;
+
+            // Apply purchase to balance & reset cart
+            startingCoins = remaining;
+            cart = [];
+            updateWalletUI();
+
+            closeCart();
+            document.getElementById('receipt-modal').classList.add('active');
+        }
+
+        function copyReceiptText() {
+            const copyText = document.getElementById('receipt-text');
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            alert("Receipt copied to clipboard!");
+        }
+    </script>
+</body>
+</html>
